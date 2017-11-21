@@ -1,5 +1,4 @@
 from bs4 import BeautifulSoup as bs, CData
-from pymongo import MongoClient
 from os import environ as env
 import re
 import hashlib
@@ -7,18 +6,14 @@ import hashlib
 import settings
 
 from erp import tnp_login, req_args
-import hooks
 
-NUM_NOTICES_DIFFED = 5
-
-mc = MongoClient(env['MONGOLAB_URI'])
+NUM_NOTICES_DIFFED = 50
 
 ERP_COMPANIES_URL = 'https://erp.iitkgp.ernet.in/TrainingPlacementSSO/ERPMonitoring.htm?action=fetchData&jqqueryid=37&_search=false&nd=1448725351715&rows=20&page=1&sidx=&sord=asc&totalrows=50'
 ERP_NOTICEBOARD_URL = 'https://erp.iitkgp.ernet.in/TrainingPlacementSSO/Notice.jsp'
 ERP_NOTICES_URL = 'https://erp.iitkgp.ernet.in/TrainingPlacementSSO/ERPMonitoring.htm?action=fetchData&jqqueryid=54&_search=false&nd=1448884994803&rows=20&page=1&sidx=&sord=asc&totalrows=50'
 ERP_ATTACHMENT_URL = 'https://erp.iitkgp.ernet.in/TrainingPlacement/TPJNFDescriptionShow?filepath='
 ERP_NOTICE_CONTENT_URL = 'https://erp.iitkgp.ernet.in/TrainingPlacementSSO/ShowContent.jsp?year=%s&id=%s'
-
 
 @tnp_login
 def check_notices(session, sessionData):
@@ -28,8 +23,6 @@ def check_notices(session, sessionData):
     print "ERP and TNP login completed!"
 
     notices_list = bs(r.text, 'html.parser')
-
-    print "Total number of notices fetched: %d" % len(notices_list)
 
     notices = []
     # Only check the first 50 notices
@@ -63,62 +56,67 @@ def check_notices(session, sessionData):
 
         notices.append(notice)
 
-    handle_notices_diff(notices)
+    print "Length of notices: %d" % len(notices)
+    
+    #  for i in notices[:5]:
+#
+        #  print i
+        #  print '\n\n'
 
+    import datetime
+    soup = bs("<html><head/><body style='margin:20px'><div class='container'><h3>Last updated %s</h3><div id='content'></div></div></html>" % datetime.datetime.now(), "lxml")
 
-def handle_notices_diff(notices):
-    notices_coll = mc.get_default_database().notices
+    link1 = soup.new_tag('link', rel="stylesheet", \
+            href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/css/bootstrap.min.css",\
+            integrity="sha384-PsH8R72JQ3SOdhVi3uxftmaW6Vc51MKb0q5P2rRUpPvrszuE4W1povHYgTpBfshb",\
+            crossorigin="anonymous")
 
-    different_notices = []
-    print 'Checking ', len(notices), 'notices'
-    for notice in notices:
-        db_notice = notices_coll.find_one(notice)
-        if db_notice is None:
-            different_notices.append(notice)
+    #  soup.select("head")[0].append(link1)
 
-    print 'Different notices: ', different_notices
-    if len(different_notices) > 0:
-        for notice in different_notices:
-            hooks.notices_updated([notice])
-            notices_coll.insert_one(notice)
+    div = soup.select("#content")[0]
 
+    for i in notices:
 
-@tnp_login
-def check_companies(session, sessionData):
-    r = session.get(ERP_COMPANIES_URL, **req_args)
+        tag = soup.new_tag("div")
 
-    companies_list = bs(r.text, 'html.parser')
-    companies = []
-    for row in companies_list.find_all('row'):
-        company = {}
-        cds = filter(lambda x: isinstance(x, CData), row.find_all(text=True))
+        contents = bs(i['text'], 'lxml')
+        i_t = soup.new_tag("i")
+        i_t.string = i['time']
+        title = soup.new_tag("h3")
+        title.string = "%s - %s" % (i['company'], i['subject'])
+        br_t = soup.new_tag("br")
+        hr_t = soup.new_tag("hr")
 
-        a = bs(cds[0].string, 'html.parser').find_all('a')[0]
-        company['name'], company['name_link'] = a.attrs['title'], a.attrs['onclick']
+        orders = [title, br_t, i_t, br_t]
 
-        a = bs(cds[3].string, 'html.parser').find_all('a')[0]
-        company['job'], company['job_link'] = a.attrs['title'], a.attrs['onclick']
+        for j in contents.select("body")[0].contents:
+            orders.append(j)
 
-        a = bs(cds[7].string, 'html.parser').find_all('a')[0]
-        company['description_link'] = a.attrs['onclick']
+        orders.append(br_t)
 
-        company['start_date'], company['end_date'] = cds[9], cds[10]
-        companies.append(company)
+        attachment = None
 
-    handle_companies_diff(companies)
+        if 'attachment_url' in i.keys():
+            attachment = soup.new_tag("a", href=i['attachment_url'], target="_blank")
+            attachment.string = "Attachment"
+            orders.append(br_t)
+            orders.append(attachment)
+            orders.append(br_t)
+            orders.append(br_t)
 
+        orders.append(hr_t)
 
-def handle_companies_diff(companies):
-    companies_coll = mc.get_default_database().companies
+        for j in orders:
+            tag.append(j)
 
-    different_companies = []
-    print 'Checking ', len(companies), 'companies'
-    for company in companies:
-        db_company = companies_coll.find_one(company)
-        if db_company is None:
-            different_companies.append(company)
+        div.append(tag)
 
-    print 'Different companies:', different_companies
-    if len(different_companies) > 0:
-        hooks.companies_updated(different_companies)
-        companies_coll.insert(different_companies)
+    with open("index.html", "w") as filout:
+
+        u = soup.prettify()
+        u = u.encode("ascii", "ignore")
+        filout.write(u)
+
+if __name__ == '__main__':
+
+    check_notices()
