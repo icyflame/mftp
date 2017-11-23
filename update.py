@@ -66,12 +66,22 @@ def check_notices(session, sessionData):
     import datetime
     soup = bs("<html><head/><body style='margin:20px'><div class='container'><h3>Last updated %s</h3><div id='content'></div></div></html>" % datetime.datetime.now(), "lxml")
 
+    refresher = soup.new_tag("meta", content="50")
+    refresher['http-equiv'] = "refresh"
+
+    soup.select("head")[0].append(refresher)
+
+    title1 = soup.new_tag('title')
+    title1.string = "CDC Notice Board - LOCAL"
+
+    soup.select("head")[0].append(title1)
+
     link1 = soup.new_tag('link', rel="stylesheet", \
             href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/css/bootstrap.min.css",\
             integrity="sha384-PsH8R72JQ3SOdhVi3uxftmaW6Vc51MKb0q5P2rRUpPvrszuE4W1povHYgTpBfshb",\
             crossorigin="anonymous")
 
-    #  soup.select("head")[0].append(link1)
+    soup.select("head")[0].append(link1)
 
     div = soup.select("#content")[0]
 
