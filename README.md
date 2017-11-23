@@ -1,52 +1,44 @@
-# mftp
+# mftp - self sufficient
 
-[![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy)
+> Get emails when T&P stuff changes on IIT KGP's ERP.
 
-Get emails when T&P stuff changes on IIT KGP's ERP.
+![img](./demo.png)
+
+_Top part of the page_
+
+![img](./attachments.png)
+
+_Attachment URLs are given at the end of the notice_
 
 ## Setup
 
-Deploy to Heroku and set config variables.
+Tested only on Ubuntu 16.04 LTS. Should work on machines with Python 2
+installed.
 
-### Required config variables
-
-The following is a list of all the config variables that are required for MFTP
-to work:
+1. Setup a cron job
 
 ```sh
-EMAIL_ADDRESS
-ERP_A1
-ERP_A2
-ERP_A3
-ERP_PASSWORD
-ERP_Q1
-ERP_Q2
-ERP_Q3
-ERP_USERNAME
-MAILGUN_API_KEY
-MAILGUN_DOMAIN
-MAILGUN_PUBLIC_KEY
-MAILGUN_SMTP_LOGIN
-MAILGUN_SMTP_PASSWORD
-MAILGUN_SMTP_PORT
-MAILGUN_SMTP_SERVER
-MONGOLAB_URI
-NOTICES_EMAIL_ADDRESS
+* * * * * cd path-to-clone && python update.py
 ```
 
-Among these, the variables prefixed by `MAILGUN` will be added by Heroku when
-you run the command `heroku addons:create mailgun:starter`.
+2. Start a HTTP server at the path where you cloned this file
 
-The `MONGOLAB_URI` env variable will be set by `heroku addons:create
-mongolab:sandbox`.
+```sh
+python -m SimpleHTTPServer 4000
+```
 
-You need to add the other variables. You can add either by using the command
-`heroku config:set KEY=VALUE` from the command line, or you can use the Heroku
-web interface, under the **Settings** tab.
+This will start a server at `http://localhost:4000`. This is the easiest way to
+start a server, you can use something more complex, or some other language.
 
-## WTF
+**Note:** This might be insecure if you don't have
+[`ufw`](https://wiki.ubuntu.com/UncomplicatedFirewall) on your computer. If you
+want to stay secure, activate ufw and configure it to ensure that all ports are
+closed on your computer.
 
-mftp monitors your ERP account for changes to the notices and the companies list, and sends you an email if there are any new or modified entries. Your credentials are stored as Heroku config variables, and you run your own Heroku instance.
+3. Open the server page in your browser window
+
+**Tip:** You can pin the tab. It will auto-refresh every 50 seconds. The data is
+fetched every minute. The last updated time is shown at the top of the screen.
 
 ## License
 

@@ -14,12 +14,6 @@ ERP_SECRET_QUESTION_URL = 'https://erp.iitkgp.ernet.in/SSOAdministration/getSecu
 ERP_CDC_MODULE_URL = 'https://erp.iitkgp.ernet.in/IIT_ERP3/menulist.htm?module_id=26'
 ERP_TPSTUDENT_URL = 'https://erp.iitkgp.ernet.in/TrainingPlacementSSO/TPStudent.jsp'
 
-from os.path import join, dirname
-from dotenv import load_dotenv
-
-dotenv_path = join(dirname(__file__), '.env')
-load_dotenv(dotenv_path)
-
 req_args = {
     'timeout': 20,
     'headers': {
@@ -64,6 +58,8 @@ def erp_login(func):
             print 'No secret question matched:', secret_question
             sys.exit(1)
 
+        print "Secret answer: %s" % secret_answer
+
         login_details = {
             'user_id': env['ERP_USERNAME'],
             'password': env['ERP_PASSWORD'],
@@ -75,6 +71,8 @@ def erp_login(func):
 
         r = s.post(ERP_LOGIN_URL, data=login_details,
                    **req_args)
+
+        print r.history
         ssoToken = re.search(r'\?ssoToken=(.+)$',
                              r.history[1].headers['Location']).group(1) 
 
