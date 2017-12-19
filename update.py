@@ -57,11 +57,6 @@ def check_notices(session, sessionData):
         notices.append(notice)
 
     print "Length of notices: %d" % len(notices)
-    
-    #  for i in notices[:5]:
-#
-        #  print i
-        #  print '\n\n'
 
     import datetime
     soup = bs("<html><head/><body style='margin:20px'><div class='container'><h3>Last updated %s</h3><div id='content'></div></div></html>" % datetime.datetime.now(), "lxml")
@@ -88,29 +83,31 @@ def check_notices(session, sessionData):
         tag = soup.new_tag("div")
 
         contents = bs(i['text'], 'lxml')
+
         i_t = soup.new_tag("i")
-        i_t.string = i['time']
+        i_t.append(str(i['time']))
+
         title = soup.new_tag("h3")
-        title.string = "%s - %s" % (i['company'], i['subject'])
-        br_t = soup.new_tag("br")
+        title.append("%s - %s" % (i['company'], i['subject']))
+
         hr_t = soup.new_tag("hr")
 
-        orders = [title, br_t, i_t, br_t]
+        orders = [title, i_t, soup.new_tag("br")]
 
         for j in contents.select("body")[0].contents:
             orders.append(j)
 
-        orders.append(br_t)
+        orders.append(soup.new_tag("br"))
 
         attachment = None
 
         if 'attachment_url' in i.keys():
             attachment = soup.new_tag("a", href=i['attachment_url'], target="_blank")
             attachment.string = "Attachment"
-            orders.append(br_t)
+            orders.append(soup.new_tag("br"))
             orders.append(attachment)
-            orders.append(br_t)
-            orders.append(br_t)
+            orders.append(soup.new_tag("br"))
+            orders.append(soup.new_tag("br"))
 
         orders.append(hr_t)
 

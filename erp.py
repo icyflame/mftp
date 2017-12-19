@@ -36,7 +36,7 @@ def erp_login(func):
         r = s.get(ERP_HOMEPAGE_URL, **req_args)
         soup = bs(r.text, 'html.parser')
 
-        print "Length of the fetched HTML: " + str(len(str(r.text)))
+        #  print "Length of the fetched HTML: " + str(len(str(r.text)))
         # print str(r.text)
         if soup.find(id='sessionToken'):
             sessionToken = soup.find(id='sessionToken').attrs['value']
@@ -46,10 +46,9 @@ def erp_login(func):
         r = s.post(ERP_SECRET_QUESTION_URL, data={'user_id': env['ERP_USERNAME']},
                    **req_args)
         secret_question = r.text
-        print "Secret question from the ERP: " + secret_question
         secret_answer = None
         for i in xrange(1, 4):
-            print env['ERP_Q%d' % i]
+            #  print env['ERP_Q%d' % i]
             if env['ERP_Q%d' % i] == secret_question:
                 secret_answer = env['ERP_A%d' % i]
                 break
@@ -57,8 +56,6 @@ def erp_login(func):
         if secret_answer is None:
             print 'No secret question matched:', secret_question
             sys.exit(1)
-
-        print "Secret answer: %s" % secret_answer
 
         login_details = {
             'user_id': env['ERP_USERNAME'],
@@ -72,7 +69,6 @@ def erp_login(func):
         r = s.post(ERP_LOGIN_URL, data=login_details,
                    **req_args)
 
-        print r.history
         ssoToken = re.search(r'\?ssoToken=(.+)$',
                              r.history[1].headers['Location']).group(1) 
 
