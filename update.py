@@ -77,9 +77,7 @@ def check_notices(session, sessionData):
     soup.select("head")[0].append(title1)
 
     link1 = soup.new_tag('link', rel="stylesheet", \
-            href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/css/bootstrap.min.css",\
-            integrity="sha384-PsH8R72JQ3SOdhVi3uxftmaW6Vc51MKb0q5P2rRUpPvrszuE4W1povHYgTpBfshb",\
-            crossorigin="anonymous")
+            href="bootstrap.min.css")
 
     soup.select("head")[0].append(link1)
 
