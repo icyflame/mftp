@@ -1,6 +1,6 @@
 # mftp - self sufficient
 
-> Get emails when T&P stuff changes on IIT KGP's ERP.
+> A pleasant notice board relaying CDC changes inside IIT KGP
 
 ![img](./demo.png)
 
